@@ -5,6 +5,8 @@
 
 #if defined(EVAL_NNUE)
 
+#include <immintrin.h>
+
 namespace Eval {
 
 namespace NNUE {
