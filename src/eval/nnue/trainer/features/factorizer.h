@@ -85,13 +85,9 @@ namespace Eval {
       // 学習用特徴量を追加せず、必要に応じてインデックスの差分を返す
       // 対応する特徴量がない場合にInheritFeaturesIfRequired()の代わりに呼ぶ
       // Do not add training features, but return index differences as needed.
-      // Call it instead of InheritFeaturesIfRequired() when the corresponding feature is missing.
+      // Call this instead of InheritFeaturesIfRequired() when the corresponding feature is missing.
       IndexType SkipFeatures(FeatureProperties properties) {
-
-        if (!properties.active)
-            return 0;
-
-        return properties.dimensions;
+        return properties.active ? properties.dimensions : 0;
       }
 
       // 学習用特徴量の次元数を取得する

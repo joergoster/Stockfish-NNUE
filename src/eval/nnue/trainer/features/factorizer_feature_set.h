@@ -59,7 +59,6 @@ namespace Eval {
                                                           + Head::GetDimensions() - Head::kBaseDimensions));
                   if (index < Head::kBaseDimensions)
                       feature.ShiftIndex(Tail::kBaseDimensions);
-
                   else
                       feature.ShiftIndex(Tail::GetDimensions() - Tail::kBaseDimensions);
               }
