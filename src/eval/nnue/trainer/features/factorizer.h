@@ -1,5 +1,5 @@
 ﻿// NNUE評価関数の特徴量変換クラステンプレート
-﻿// Feature Transformation Class for NNUE Evaluation Function
+// Feature Transformation Class for NNUE Evaluation Function
 
 #ifndef _NNUE_TRAINER_FEATURES_FACTORIZER_H_
 #define _NNUE_TRAINER_FEATURES_FACTORIZER_H_

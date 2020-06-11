@@ -1,5 +1,5 @@
 ﻿// NNUE評価関数の特徴量変換クラステンプレートのHalfKP用特殊化
-﻿// Specialization of the feature conversion class template of the NNUE evaluation function for HalfKP
+// Specialization of the feature conversion class template of the NNUE evaluation function for HalfKP
 
 #ifndef _NNUE_TRAINER_FEATURES_FACTORIZER_HALF_KP_H_
 #define _NNUE_TRAINER_FEATURES_FACTORIZER_HALF_KP_H_
