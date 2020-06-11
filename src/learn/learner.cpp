@@ -92,21 +92,23 @@ using namespace std;
 // atomic<T>に対する足し算、引き算の定義
 // Apery/learner.hppにあるatomicAdd()に合わせてある。
 template <typename T>
-T operator += (std::atomic<T>& x, const T rhs)
-{
+T operator += (std::atomic<T>& x, const T rhs) {
+
 	T old = x.load(std::memory_order_consume);
 	// このタイミングで他スレッドから値が書き換えられることは許容する。
 	// 値が破壊されなければ良しという考え。
 	T desired = old + rhs;
+
 	while (!x.compare_exchange_weak(old, desired, std::memory_order_release, std::memory_order_consume))
 		desired = old + rhs;
+
 	return desired;
 }
+
 template <typename T>
 T operator -= (std::atomic<T>& x, const T rhs) { return x += -rhs; }
 
-namespace Learner
-{
+namespace Learner {
 
 // 局面の配列 : PSVector は packed sfen vector の略。
 typedef std::vector<PackedSfenValue> PSVector;
@@ -116,11 +118,9 @@ typedef std::vector<PackedSfenValue> PSVector;
 // -----------------------------------
 
 // Sfenを書き出して行くためのヘルパクラス
-struct SfenWriter
-{
+struct SfenWriter {
 	// 書き出すファイル名と生成するスレッドの数
-	SfenWriter(string filename, int thread_num)
-	{
+	SfenWriter(string filename, int thread_num) {
 		sfen_buffers_pool.reserve((size_t)thread_num * 10);
 		sfen_buffers.resize(thread_num);
 
@@ -132,8 +132,7 @@ struct SfenWriter
 		finished = false;
 	}
 
-	~SfenWriter()
-	{
+	~SfenWriter() {
 		finished = true;
 		file_worker_thread.join();
 		fs.close();
@@ -147,8 +146,7 @@ struct SfenWriter
 	const size_t SFEN_WRITE_SIZE = 5000;
 
 	// 局面と評価値をペアにして1つ書き出す(packされたsfen形式で)
-	void write(size_t thread_id, const PackedSfenValue& psv)
-	{
+	void write(size_t thread_id, const PackedSfenValue& psv) {
 		// スレッドごとにbufferを持っていて、そこに追加する。
 		// bufferが溢れたら、ファイルに書き出す。
 
@@ -180,8 +178,8 @@ struct SfenWriter
 	}
 
 	// 自分のスレッド用のバッファに残っている分をファイルに書き出すためのバッファに移動させる。
-	void finalize(size_t thread_id)
-	{
+	void finalize(size_t thread_id) {
+
 		std::unique_lock<std::mutex> lk(mutex);
 
 		auto& buf = sfen_buffers[thread_id];
@@ -194,14 +192,13 @@ struct SfenWriter
 	}
 
 	// write_workerスレッドを開始する。
-	void start_file_write_worker()
-	{
+	void start_file_write_worker() {
 		file_worker_thread = std::thread([&] { this->file_write_worker(); });
 	}
 
 	// ファイルに書き出すの専用スレッド
-	void file_write_worker()
-	{
+	void file_write_worker() {
+
 		auto output_status = [&]()
 		{
 			// 現在時刻も出力
@@ -230,12 +227,11 @@ struct SfenWriter
 				for (auto ptr : buffers)
 				{
 					fs.write((const char*)&((*ptr)[0]), sizeof(PackedSfenValue) * ptr->size());
-
 					sfen_write_count += ptr->size();
-
 #if 1
 					// 処理した件数をここに加算していき、save_everyを超えたら、ファイル名を変更し、このカウンターをリセットする。
 					save_every_counter += ptr->size();
+
 					if (save_every_counter >= save_every)
 					{
 						save_every_counter = 0;
@@ -251,7 +247,6 @@ struct SfenWriter
 						cout << endl << "output sfen file = " << filename << endl;
 					}
 #endif
-
 					// 棋譜を書き出すごとに'.'を出力。
 					std::cout << ".";
 
@@ -275,7 +270,6 @@ struct SfenWriter
 	uint64_t save_every = UINT64_MAX;
 
 private:
-
 	fstream fs;
 
 	// コンストラクタで渡されたファイル名
@@ -286,6 +280,7 @@ private:
 
 	// ファイルに書き込む用のthread
 	std::thread file_worker_thread;
+
 	// すべてのスレッドが終了したかのフラグ
 	atomic<bool> finished;
 
@@ -311,8 +306,7 @@ private:
 // -----------------------------------
 
 // 複数スレッドでsfenを生成するためのクラス
-struct MultiThinkGenSfen : public MultiThink
-{
+struct MultiThinkGenSfen : public MultiThink {
 	MultiThinkGenSfen(int search_depth_, int search_depth2_, SfenWriter& sw_)
 		: search_depth(search_depth_), search_depth2(search_depth2_), sw(sw_)
 	{
@@ -367,8 +361,8 @@ struct MultiThinkGenSfen : public MultiThink
 };
 
 //  thread_id    = 0..Threads.size()-1
-void MultiThinkGenSfen::thread_worker(size_t thread_id)
-{
+void MultiThinkGenSfen::thread_worker(size_t thread_id) {
+
 	// とりあえず、書き出す手数の最大のところで引き分け扱いになるものとする。
 	const int MAX_PLY2 = write_maxply;
 
@@ -389,9 +383,8 @@ void MultiThinkGenSfen::thread_worker(size_t thread_id)
 		// 並列化するときは、Threads (これが実体が vector<Thread*>なので、
 		// Threads[0]...Threads[thread_num-1]までに対して同じようにすれば良い。
 		auto th = Threads[thread_id];
-
 		auto& pos = th->rootPos;
-    pos.set(StartFEN, false, &si, th);
+        pos.set(StartFEN, false, &si, th);
 
     // Test cod for Packed SFEN.
     //{
@@ -431,6 +424,7 @@ void MultiThinkGenSfen::thread_worker(size_t thread_id)
 				// get_next_loop_count()内でカウンターを加算するので
 				// 局面を出力したときにこれを呼び出さないとカウンターが狂う。
 				auto loop_count = get_next_loop_count();
+
 				if (loop_count == UINT64_MAX)
 				{
 					// 終了フラグを立てておく。
@@ -503,17 +497,26 @@ void MultiThinkGenSfen::thread_worker(size_t thread_id)
 				break;
 			}
 
-      if (pos.is_draw(ply)) {
-        // Do not write if draw.
-        break;
-      }
+            // Do not write if draw
+            if (pos.is_draw(ply))
+            {
+#if defined (LEARN_GENSFEN_USE_DRAW_RESULT)
+				flush_psv(0);
+#endif
+                break;
+            }
 
 			// 全駒されて詰んでいたりしないか？
-			if (MoveList<LEGAL>(pos).size() == 0)
+			if (MoveList<LEGAL>(pos).size() == 0) // can be mate or stalemate
 			{
-        // (この局面の一つ前の局面までは書き出す)
-        // Write the positions other than this position if checkmated.
-        flush_psv(-1);
+                // (この局面の一つ前の局面までは書き出す)
+                // Write the position if checkmated
+                if (pos.checkers())
+                    flush_psv(-1);
+#if defined (LEARN_GENSFEN_USE_DRAW_RESULT)
+                else
+                    flush_psv(0);
+#endif
 				break;
 			}
 
@@ -536,7 +539,7 @@ void MultiThinkGenSfen::thread_worker(size_t thread_id)
 			//		goto DO_MOVE;
 			//}
 
-			{
+			{ // obsolete ???
 				// search_depth～search_depth2 手読みの評価値とPV(最善応手列)
 				// 探索窓を狭めておいても問題ないはず。
 
@@ -562,9 +565,8 @@ void MultiThinkGenSfen::thread_worker(size_t thread_id)
 				}
 
 				// おかしな指し手の検証
-				if (pv1.size() > 0
-					&& (pv1[0] == MOVE_NONE || pv1[0] == MOVE_NULL)
-					)
+				if (    pv1.size() > 0
+					&& (pv1[0] == MOVE_NONE || pv1[0] == MOVE_NULL))
 				{
 					// MOVE_WINは、この手前で宣言勝ちの局面であるかチェックしているので
 					// ここで宣言勝ちの指し手が返ってくることはないはず。
@@ -575,20 +577,21 @@ void MultiThinkGenSfen::thread_worker(size_t thread_id)
 
 				// 各千日手に応じた処理。
 
-        if (pos.is_draw(0)) {
+                if (pos.is_draw(0))
+                {
 #if defined	(LEARN_GENSFEN_USE_DRAW_RESULT)
-          // 引き分けを書き出すとき
-          flush_psv(is_win);
+                    // 引き分けを書き出すとき
+                    flush_psv(is_win); // ??? flush_psv(0);
 #endif
-          break;
-        }
+                    break;
+                 }
 
 				// PVの指し手でleaf nodeまで進めて、そのleaf nodeでevaluate()を呼び出した値を用いる。
-				auto evaluate_leaf = [&](Position& pos , vector<Move>& pv)
-				{
-					auto rootColor = pos.side_to_move();
+				auto evaluate_leaf = [&](Position& pos , vector<Move>& pv) {
 
+					auto rootColor = pos.side_to_move();
 					int ply2 = ply;
+
 					for (auto m : pv)
 					{
 						// デバッグ用の検証として、途中に非合法手が存在しないことを確認する。
@@ -609,9 +612,9 @@ void MultiThinkGenSfen::thread_worker(size_t thread_id)
 						// 毎ノードevaluate()を呼び出さないと、evaluate()の差分計算が出来ないので注意！
 						// depthが8以上だとこの差分計算はしないほうが速いと思われる。
 #if defined(EVAL_NNUE)
-            if (depth < 8)
-              Eval::evaluate_with_no_return(pos);
-#endif  // defined(EVAL_NNUE)
+                        if (depth < 8)
+                            Eval::evaluate_with_no_return(pos);
+#endif
 					}
 
 					// leafに到達
@@ -708,7 +711,7 @@ void MultiThinkGenSfen::thread_worker(size_t thread_id)
 					psv.move = pv_move1;
 				}
 
-			SKIP_SAVE:;
+			SKIP_SAVE:
 
 				// 何故かPVが得られなかった(置換表などにhitして詰んでいた？)ので次の対局に行く。
 				// かなりのレアケースなので無視して良いと思う。
@@ -717,9 +720,9 @@ void MultiThinkGenSfen::thread_worker(size_t thread_id)
 				
 				// search_depth手読みの指し手で局面を進める。
 				m = pv1[0];
-			}
+			} // obsolete ???
 
-		RANDOM_MOVE:;
+		RANDOM_MOVE:
 
 			// 合法手のなかからランダムに1手選ぶフェーズ
 			if (
@@ -773,16 +776,16 @@ void MultiThinkGenSfen::thread_worker(size_t thread_id)
 					// 玉の2手指しのコードを入れていたが、合法手から1手選べばそれに相当するはずで
 					// コードが複雑化するだけだから不要だと判断した。
 				}
-				else {
+				else
+                {
 					// ロジックが複雑になるので、すまんがここで再度MultiPVで探索する。
 					Learner::search(pos, random_multi_pv_depth, random_multi_pv);
 					// rootMovesの上位N手のなかから一つ選択
 
 					auto& rm = pos.this_thread()->rootMoves;
-
 					uint64_t s = min((uint64_t)rm.size(), (uint64_t)random_multi_pv);
+
 					for (uint64_t i = 1; i < s; ++i)
-					{
 						// rm[0]の評価値との差がrandom_multi_pv_diffの範囲でなければならない。
 						// rm[x].scoreは、降順に並んでいると仮定できる。 
 						if (rm[0].score > rm[i].score + random_multi_pv_diff)
@@ -790,7 +793,6 @@ void MultiThinkGenSfen::thread_worker(size_t thread_id)
 							s = i;
 							break;
 						}
-					}
 
 					m = rm[prng.rand(s)].pv[0];
 
@@ -804,7 +806,7 @@ void MultiThinkGenSfen::thread_worker(size_t thread_id)
 				a_psv.clear(); // 保存していた局面のクリア
 			}
 
-		DO_MOVE:;
+		DO_MOVE:
 			pos.do_move(m, states[ply]);
 
 			// 差分計算を行なうために毎node evaluate()を呼び出しておく。
@@ -822,8 +824,8 @@ void MultiThinkGenSfen::thread_worker(size_t thread_id)
 // -----------------------------------
 
 // 棋譜を生成するコマンド
-void gen_sfen(Position&, istringstream& is)
-{
+void gen_sfen(Position&, istringstream& is) {
+
 	// スレッド数(これは、USIのsetoptionで与えられる)
 	uint32_t thread_num = (uint32_t)Options["Threads"];
 
@@ -929,22 +931,26 @@ void gen_sfen(Position&, istringstream& is)
 	// search depth2が設定されていないなら、search depthと同じにしておく。
 	if (search_depth2 == INT_MIN)
 		search_depth2 = search_depth;
+
 	if (random_multi_pv_depth == INT_MIN)
 		random_multi_pv_depth = search_depth;
 
 	if (random_file_name)
 	{
 		// output_file_nameにこの時点でランダムな数値を付与してしまう。
-    std::random_device seed_gen;
-    PRNG r(seed_gen());
+        std::random_device seed_gen;
+        PRNG r(seed_gen());
+
 		// 念のため乱数振り直しておく。
-		for(int i=0;i<10;++i)
+		for(int i = 0; i < 10; ++i)
 			r.rand(1);
+
 		auto to_hex = [](uint64_t u){
 			std::stringstream ss;
 			ss << std::hex << u;
 			return ss.str();
 		};
+
 		// 64bitの数値で偶然かぶると嫌なので念のため64bitの数値２つくっつけておく。
 		output_file_name = output_file_name + "_" + to_hex(r.rand<uint64_t>()) + to_hex(r.rand<uint64_t>());
 	}
@@ -1007,36 +1013,31 @@ void gen_sfen(Position&, istringstream& is)
 // -----------------------------------
 
 // 普通のシグモイド関数
-double sigmoid(double x)
-{
+double sigmoid(double x) {
 	return 1.0 / (1.0 + std::exp(-x));
 }
 
 // 評価値を勝率[0,1]に変換する関数
-double winning_percentage(double value)
-{
+double winning_percentage(double value) {
 	// この600.0という定数は、ponanza定数。(ponanzaがそうしているらしいという意味で)
 	// ゲームの進行度に合わせたものにしたほうがいいかも知れないけども、その効果のほどは不明。
 	return sigmoid(value / 600.0);
 }
 
 // 普通のシグモイド関数の導関数。
-double dsigmoid(double x)
-{
+double dsigmoid(double x) {
 	// シグモイド関数
 	//    f(x) = 1/(1+exp(-x))
 	// に対して1階微分は、
 	//    f'(x) = df/dx = f(x)・{ 1 - f(x) }
 	// となる。
-
 	return sigmoid(x) * (1.0 - sigmoid(x));
 }
 
 // 目的関数が勝率の差の二乗和のとき
 #if defined (LOSS_FUNCTION_IS_WINNING_PERCENTAGE)
 // 勾配を計算する関数
-double calc_grad(Value deep, Value shallow, PackedSfenValue& psv)
-{
+double calc_grad(Value deep, Value shallow, PackedSfenValue& psv) {
 	// 勝率の差の2乗が目的関数それを最小化する。
 	// 目的関数 J = 1/2m Σ ( win_rate(shallow) - win_rate(deep) ) ^2
 	// ただし、σはシグモイド関数で、評価値を勝率の差に変換するもの。
@@ -1064,8 +1065,7 @@ double calc_grad(Value deep, Value shallow, PackedSfenValue& psv)
 #endif
 
 #if defined (LOSS_FUNCTION_IS_CROSS_ENTOROPY)
-double calc_grad(Value deep, Value shallow, const PackedSfenValue& psv)
-{
+double calc_grad(Value deep, Value shallow, const PackedSfenValue& psv) {
 	// 交差エントロピーを用いた目的関数
 
 	// 交差エントロピーの概念と性質については、
@@ -1091,8 +1091,7 @@ double calc_grad(Value deep, Value shallow, const PackedSfenValue& psv)
 #endif
 
 #if defined ( LOSS_FUNCTION_IS_CROSS_ENTOROPY_FOR_VALUE )
-double calc_grad(Value deep, Value shallow, const PackedSfenValue& psv)
-{
+double calc_grad(Value deep, Value shallow, const PackedSfenValue& psv) {
 	// 勝率の関数を通さない版
 	// これ、EVAL_LIMITを低くしておかないと、終盤の形に対して評価値を一致させようとして
 	// evalがevalの範囲を超えかねない。
@@ -1110,11 +1109,9 @@ double ELMO_LAMBDA = 0.33;
 double ELMO_LAMBDA2 = 0.33;
 double ELMO_LAMBDA_LIMIT = 32000;
 
-double calc_grad(Value deep, Value shallow , const PackedSfenValue& psv)
-{
+double calc_grad(Value deep, Value shallow , const PackedSfenValue& psv) {
 	// elmo(WCSC27)方式
 	// 実際のゲームの勝敗で補正する。
-
 	const double eval_winrate = winning_percentage(shallow);
 	const double teacher_winrate = winning_percentage(deep);
 
@@ -1136,8 +1133,8 @@ double calc_grad(Value deep, Value shallow , const PackedSfenValue& psv)
 // elmo式の勝敗項と勝率項との個別の交差エントロピーが引数であるcross_entropy_evalとcross_entropy_winに返る。
 void calc_cross_entropy(Value deep, Value shallow, const PackedSfenValue& psv,
 	double& cross_entropy_eval, double& cross_entropy_win, double& cross_entropy,
-	double& entropy_eval, double& entropy_win, double& entropy)
-{
+	double& entropy_eval, double& entropy_win, double& entropy) {
+
 	const double p /* teacher_winrate */ = winning_percentage(deep);
 	const double q /* eval_winrate    */ = winning_percentage(shallow);
 	const double t = double(psv.game_result + 1) / 2;
@@ -1145,39 +1142,43 @@ void calc_cross_entropy(Value deep, Value shallow, const PackedSfenValue& psv,
 	constexpr double epsilon = 0.000001;
 
 	// 深い探索での評価値がELMO_LAMBDA_LIMITを超えているならELMO_LAMBDAではなくELMO_LAMBDA2を適用する。
+    // Apply ELMO_LAMBDA2 instead of ELMO_LAMBDA if the evaluation value in the deep search is greater than ELMO_LAMBDA_LIMIT
 	const double lambda = (abs(deep) >= ELMO_LAMBDA_LIMIT) ? ELMO_LAMBDA2 : ELMO_LAMBDA;
 
 	const double m = (1.0 - lambda) * t + lambda * p;
 
 	cross_entropy_eval =
 		(-p * std::log(q + epsilon) - (1.0 - p) * std::log(1.0 - q + epsilon));
+
 	cross_entropy_win =
 		(-t * std::log(q + epsilon) - (1.0 - t) * std::log(1.0 - q + epsilon));
+
 	entropy_eval =
 		(-p * std::log(p + epsilon) - (1.0 - p) * std::log(1.0 - p + epsilon));
+
 	entropy_win =
 		(-t * std::log(t + epsilon) - (1.0 - t) * std::log(1.0 - t + epsilon));
 
 	cross_entropy =
 		(-m * std::log(q + epsilon) - (1.0 - m) * std::log(1.0 - q + epsilon));
+
 	entropy =
 		(-m * std::log(m + epsilon) - (1.0 - m) * std::log(1.0 - m + epsilon));
 }
 
 #endif
 
-
 // 目的関数として他のバリエーションも色々用意するかも..
+// I may provide many other variations of the objective function
 
 double calc_grad(Value shallow, const PackedSfenValue& psv) {
 	return calc_grad((Value)psv.score, shallow, psv);
 }
 
 // Sfenの読み込み機
-struct SfenReader
-{
-	SfenReader(int thread_num) : prng((std::random_device())())
-	{
+struct SfenReader {
+
+	SfenReader(int thread_num) : prng((std::random_device())()) {
 		packed_sfens.resize(thread_num);
 		total_read = 0;
 		total_done = 0;
@@ -1191,13 +1192,13 @@ struct SfenReader
 		hash.resize(READ_SFEN_HASH_SIZE);
 	}
 
-	~SfenReader()
-	{
+	~SfenReader() {
 		if (file_worker_thread.joinable())
 			file_worker_thread.join();
 
 		for (auto p : packed_sfens)
 			delete p;
+
 		for (auto p : packed_sfens_pool)
 			delete p;
 	}
@@ -1208,18 +1209,21 @@ struct SfenReader
 	const uint64_t sfen_for_mse_size = 2000;
 
 	// mseなどの計算用に局面を読み込んでおく。
-	void read_for_mse()
-	{
+	void read_for_mse() {
+
 		auto th = Threads.main();
 		Position& pos = th->rootPos;
+
 		for (uint64_t i = 0; i < sfen_for_mse_size; ++i)
 		{
 			PackedSfenValue ps;
+
 			if (!read_to_thread_buffer(0, ps))
 			{
 				cout << "Error! read packed sfen , failed." << endl;
 				break;
 			}
+
 			sfen_for_mse.push_back(ps);
 
 			// hash keyを求める。
@@ -1229,13 +1233,14 @@ struct SfenReader
 		}
 	}
 
-	void read_validation_set(const string file_name, int eval_limit)
-	{
+	void read_validation_set(const string file_name, int eval_limit) {
+
 		ifstream fs(file_name, ios::binary);
 
 		while (fs)
 		{
 			PackedSfenValue p;
+
 			if (fs.read((char*)&p, sizeof(PackedSfenValue)))
 			{
 				if (eval_limit < abs(p.score))
@@ -1244,11 +1249,10 @@ struct SfenReader
 				if (p.game_result == 0)
 					continue;
 #endif
-
 				sfen_for_mse.push_back(p);
-			} else {
-				break;
 			}
+            else
+				break;
 		}
 	}
 
@@ -1261,13 +1265,12 @@ struct SfenReader
 	const size_t SFEN_READ_SIZE = LEARN_SFEN_READ_SIZE;
 
 	// [ASYNC] スレッドが局面を一つ返す。なければfalseが返る。
-	bool read_to_thread_buffer(size_t thread_id, PackedSfenValue& ps)
-	{
+	bool read_to_thread_buffer(size_t thread_id, PackedSfenValue& ps) {
 		// スレッドバッファに局面が残っているなら、それを1つ取り出して返す。
 		auto& thread_ps = packed_sfens[thread_id];
 
 		// バッファに残りがなかったらread bufferから充填するが、それすらなかったらもう終了。
-		if ((thread_ps == nullptr || thread_ps->size() == 0) // バッファが空なら充填する。
+		if (   (thread_ps == nullptr || thread_ps->size() == 0) // バッファが空なら充填する。
 			&& !read_to_thread_buffer_impl(thread_id))
 			return false;
 
@@ -1289,24 +1292,22 @@ struct SfenReader
 	}
 
 	// [ASYNC] スレッドバッファに局面をある程度読み込む。
-	bool read_to_thread_buffer_impl(size_t thread_id)
-	{
+	bool read_to_thread_buffer_impl(size_t thread_id) {
+
 		while (true)
 		{
+			std::unique_lock<std::mutex> lk(mutex);
+			// ファイルバッファから充填できたなら、それで良し。
+			if (packed_sfens_pool.size() != 0)
 			{
-				std::unique_lock<std::mutex> lk(mutex);
-				// ファイルバッファから充填できたなら、それで良し。
-				if (packed_sfens_pool.size() != 0)
-				{
-					// 充填可能なようなので充填して終了。
+				// 充填可能なようなので充填して終了。
 
-					packed_sfens[thread_id] = packed_sfens_pool.front();
-					packed_sfens_pool.pop_front();
+				packed_sfens[thread_id] = packed_sfens_pool.front();
+				packed_sfens_pool.pop_front();
 
-					total_read += THREAD_BUFFER_SIZE;
+				total_read += THREAD_BUFFER_SIZE;
 
-					return true;
-				}
+				return true;
 			}
 
 			// もうすでに読み込むファイルは無くなっている。もうダメぽ。
@@ -1321,14 +1322,13 @@ struct SfenReader
 	}
 	
 	// 局面ファイルをバックグラウンドで読み込むスレッドを起動する。
-	void start_file_read_worker()
-	{
+	void start_file_read_worker() {
 		file_worker_thread = std::thread([&] { this->file_read_worker(); });
 	}
 
 	// ファイルの読み込み専用スレッド用
-	void file_read_worker()
-	{
+	void file_read_worker() {
+
 		auto open_next_file = [&]()
 		{
 			if (fs.is_open())
@@ -1355,6 +1355,7 @@ struct SfenReader
 			// このsize()の読み取りはread onlyなのでlockしなくていいだろう。
 			while (!stop_flag && packed_sfens_pool.size() >= SFEN_READ_SIZE / THREAD_BUFFER_SIZE)
 				sleep(100);
+
 			if (stop_flag)
 				return;
 
@@ -1365,10 +1366,10 @@ struct SfenReader
 			while (sfens.size() < SFEN_READ_SIZE)
 			{
 				PackedSfenValue p;
+
 				if (fs.read((char*)&p, sizeof(PackedSfenValue)))
-				{
 					sfens.push_back(p);
-				} else
+				else
 				{
 					// 読み込み失敗
 					if (!open_next_file())
@@ -1387,6 +1388,7 @@ struct SfenReader
 			if (!no_shuffle)
 			{
 				auto size = sfens.size();
+
 				for (size_t i = 0; i < size; ++i)
 					swap(sfens[i], sfens[(size_t)(prng.rand((uint64_t)size - i) + i)]);
 			}
@@ -1410,15 +1412,13 @@ struct SfenReader
 			}
 
 			// sfensの用意が出来たので、折を見てコピー
-			{
-				std::unique_lock<std::mutex> lk(mutex);
+			std::unique_lock<std::mutex> lk(mutex);
 
-				// ポインタをコピーするだけなのでこの時間は無視できるはず…。
-				// packed_sfens_poolの内容を変更するのでmutexのlockが必要。
+			// ポインタをコピーするだけなのでこの時間は無視できるはず…。
+			// packed_sfens_poolの内容を変更するのでmutexのlockが必要。
 
-				for (size_t i = 0; i < size; ++i)
-					packed_sfens_pool.push_back(ptrs[i]);
-			}
+			for (size_t i = 0; i < size; ++i)
+				packed_sfens_pool.push_back(ptrs[i]);
 		}
 	}
 
@@ -1446,8 +1446,7 @@ struct SfenReader
 
 	// rmseの計算用の局面であるかどうかを判定する。
 	// (rmseの計算用の局面は学習のために使うべきではない。)
-	bool is_for_rmse(Key key) const
-	{
+	bool is_for_rmse(Key key) const {
 		return sfen_for_mse_hash.count(key) != 0;
 	}
 
@@ -1461,7 +1460,6 @@ struct SfenReader
 	PSVector sfen_for_mse;
 
 protected:
-
 	// fileをバックグラウンドで読み込みしているworker thread
 	std::thread file_worker_thread;
 
@@ -2941,12 +2939,10 @@ void learn(Position&, istringstream& is)
 #endif
 }
 
-
 } // namespace Learner
 
 #if defined(GENSFEN2019)
 #include "gensfen2019.cpp"
 #endif
-
 
 #endif // EVAL_LEARN
