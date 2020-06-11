@@ -581,7 +581,7 @@ void MultiThinkGenSfen::thread_worker(size_t thread_id) {
                 {
 #if defined	(LEARN_GENSFEN_USE_DRAW_RESULT)
                     // 引き分けを書き出すとき
-                    flush_psv(is_win); // ??? flush_psv(0);
+                    flush_psv(0); // ??? flush_psv(0);
 #endif
                     break;
                  }
