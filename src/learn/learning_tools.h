@@ -290,30 +290,39 @@ namespace EvalLearningTools
 	{
 	protected:
 		KK(Square king0, Square king1,bool inverse) : king0_(king0), king1_(king1) , inverse_sign(inverse) {}
+
 	public:
 		KK() {}
 
 		virtual uint64_t size() const { return max_king_sq_ * max_king_sq_; }
 
 		// index(通し番号)からKKのオブジェクトを生成するbuilder
-		KK fromIndex(uint64_t index) const { assert(index >= min_index()); return fromRawIndex(index - min_index()); }
+		KK fromIndex(uint64_t index) const {
+            assert(index >= min_index());
+
+            return fromRawIndex(index - min_index());
+        }
 
 		// raw_index(通し番号ではなく0から始まる番号)からKKのオブジェクトを生成するbuilder
-		KK fromRawIndex(uint64_t raw_index) const
-		{
+		KK fromRawIndex(uint64_t raw_index) const 
+{
 			int king1 = (int)(raw_index % SQUARE_NB);
 			raw_index /= SQUARE_NB;
 			int king0 = (int)(raw_index  /* % SQUARE_NB */);
+
 			assert(king0 < SQUARE_NB);
+
 			return fromKK((Square)king0, (Square)king1 , false);
 		}
-		KK fromKK(Square king0, Square king1 , bool inverse) const
-		{
+
+		KK fromKK(Square king0, Square king1 , bool inverse) const {
 			// kkという変数名はEval::kk配列などで使っているので別の名前にする必要がある。(以下、KKP,KPPクラスなどでも同様)
 			KK my_kk(king0, king1, inverse);
 			my_kk.set(max_king_sq_, fe_end_, min_index());
+
 			return my_kk;
 		}
+
 		KK fromKK(Square king0, Square king1) const { return fromKK(king0, king1, false); }
 
 		// fromIndex()を用いてこのオブジェクトを構築したときに、以下のアクセッサで情報が得られる。
@@ -361,8 +370,7 @@ namespace EvalLearningTools
 
 		// is_inverse() == trueのときに、gradの手番ではないほうの符号を反転させて返す。
 		template <typename T>
-		std::array<T, 2> apply_inverse_sign(const std::array<T, 2>& rhs)
-		{
+		std::array<T, 2> apply_inverse_sign(const std::array<T, 2>& rhs) {
 			return !is_inverse() ? rhs : std::array<T, 2>{-rhs[0], rhs[1]};
 		}
 
@@ -388,6 +396,7 @@ namespace EvalLearningTools
 	protected:
 		KKP(Square king0, Square king1, Eval::BonaPiece p) : king0_(king0), king1_(king1), piece_(p), inverse_sign(false) {}
 		KKP(Square king0, Square king1, Eval::BonaPiece p, bool inverse) : king0_(king0), king1_(king1), piece_(p),inverse_sign(inverse) {}
+
 	public:
 		KKP() {}
 
@@ -397,23 +406,25 @@ namespace EvalLearningTools
 		KKP fromIndex(uint64_t index) const { assert(index >= min_index()); return fromRawIndex(index - min_index()); }
 
 		// raw_index(通し番号ではなく0から始まる番号)からKKPのオブジェクトを生成するbuilder
-		KKP fromRawIndex(uint64_t raw_index) const
-		{
+		KKP fromRawIndex(uint64_t raw_index) const {
 			int piece = (int)(raw_index % Eval::fe_end);
 			raw_index /= Eval::fe_end;
 			int king1 = (int)(raw_index % SQUARE_NB);
 			raw_index /= SQUARE_NB;
 			int king0 = (int)(raw_index  /* % SQUARE_NB */);
+
 			assert(king0 < SQUARE_NB);
+
 			return fromKKP((Square)king0, (Square)king1, (Eval::BonaPiece)piece,false);
 		}
 
-		KKP fromKKP(Square king0, Square king1, Eval::BonaPiece p, bool inverse) const
-		{
+		KKP fromKKP(Square king0, Square king1, Eval::BonaPiece p, bool inverse) const {
 			KKP my_kkp(king0, king1, p, inverse);
 			my_kkp.set(max_king_sq_,fe_end_,min_index());
+
 			return my_kkp;
 		}
+
 		KKP fromKKP(Square king0, Square king1, Eval::BonaPiece p) const { return fromKKP(king0, king1, p, false); }
 
 		// fromIndex()を用いてこのオブジェクトを構築したときに、以下のアクセッサで情報が得られる。
@@ -462,8 +473,7 @@ namespace EvalLearningTools
 
 		// is_inverse() == trueのときに、gradの手番ではないほうの符号を反転させて返す。
 		template <typename T>
-		std::array<T, 2> apply_inverse_sign(const std::array<T, 2>& rhs)
-		{
+		std::array<T, 2> apply_inverse_sign(const std::array<T, 2>& rhs) {
 			return !is_inverse() ? rhs : std::array<T, 2>{-rhs[0], rhs[1]};
 		}
 
@@ -478,16 +488,14 @@ namespace EvalLearningTools
 	};
 
 	// デバッグ用出力。
-	static std::ostream& operator<<(std::ostream& os, KKP rhs)
-	{
+	static std::ostream& operator<<(std::ostream& os, KKP rhs) {
 		os << "KKP(" << rhs.king0() << "," << rhs.king1() << "," << rhs.piece() << ")";
 		return os;
 	}
 
 
 	// KK,KKPと同様。KPP用
-	struct KPP : public SerializerBase
-	{
+	struct KPP : public SerializerBase {
 	protected:
 		KPP(Square king, Eval::BonaPiece p0, Eval::BonaPiece p1) : king_(king), piece0_(p0), piece1_(p1) {}
 
@@ -504,8 +512,7 @@ namespace EvalLearningTools
 		virtual uint64_t size() const { return (uint64_t)max_king_sq_*(uint64_t)triangle_fe_end; }
 #endif
 
-		virtual void set(int max_king_sq, uint64_t fe_end, uint64_t min_index)
-		{
+		virtual void set(int max_king_sq, uint64_t fe_end, uint64_t min_index) {
 			// この値、size()で用いていて、SerializerBase::set()でsize()を使うので先に計算する。
 			triangle_fe_end = (uint64_t)fe_end*((uint64_t)fe_end + 1) / 2;
 
@@ -516,8 +523,7 @@ namespace EvalLearningTools
 		KPP fromIndex(uint64_t index) const { assert(index >= min_index()); return fromRawIndex(index - min_index()); }
 
 		// raw_index(通し番号ではなく0から始まる番号)からKPPのオブジェクトを生成するbuilder
-		KPP fromRawIndex(uint64_t raw_index) const
-		{
+		KPP fromRawIndex(uint64_t raw_index) const {
 			const uint64_t triangle_fe_end = (uint64_t)fe_end_*((uint64_t)fe_end_ + 1) / 2;
 
 #if !defined(USE_TRIANGLE_WEIGHT_ARRAY)
@@ -545,14 +551,16 @@ namespace EvalLearningTools
 			raw_index /= triangle_fe_end;
 #endif
 			int king = (int)(raw_index  /* % SQUARE_NB */);
+
 			assert(king < max_king_sq_);
+
 			return fromKPP((Square)king, (Eval::BonaPiece)piece0, (Eval::BonaPiece)piece1);
 		}
 
-		KPP fromKPP(Square king, Eval::BonaPiece p0, Eval::BonaPiece p1) const
-		{
+		KPP fromKPP(Square king, Eval::BonaPiece p0, Eval::BonaPiece p1) const {
 			KPP my_kpp(king, p0, p1);
 			my_kpp.set(max_king_sq_,fe_end_,min_index());
+
 			return my_kpp;
 		}
 
@@ -641,8 +649,8 @@ namespace EvalLearningTools
 				|| (piece0() == rhs.piece1() && piece1() == rhs.piece0())
 #endif
 					); }
-		bool operator!=(const KPP& rhs) { return !(*this == rhs); }
 
+		bool operator!=(const KPP& rhs) { return !(*this == rhs); }
 
 	private:
 		Square king_;
@@ -652,8 +660,7 @@ namespace EvalLearningTools
 	};
 
 	// デバッグ用出力。
-	static std::ostream& operator<<(std::ostream& os, KPP rhs)
-	{
+	static std::ostream& operator<<(std::ostream& os, KPP rhs) {
 		os << "KPP(" << rhs.king() << "," << rhs.piece0() << "," << rhs.piece1() << ")";
 		return os;
 	}
@@ -673,8 +680,7 @@ namespace EvalLearningTools
 	{
 	protected:
 		KPPP(int king, Eval::BonaPiece p0, Eval::BonaPiece p1, Eval::BonaPiece p2) :
-			king_(king), piece0_(p0), piece1_(p1), piece2_(p2)
-		{
+			king_(king), piece0_(p0), piece1_(p1), piece2_(p2) {
 			assert(piece0_ > piece1_ && piece1_ > piece2_);
 			/* sort_piece(); */
 		}
@@ -711,8 +717,7 @@ namespace EvalLearningTools
 		// 低次元の配列のindexを得る。
 		// p0,p1,p2を入れ替えたものは返らないので注意。
 		// またミラーしたものも、USE_KPPP_MIRROR_WRITEが有効なときしか返さない。
-		void toLowerDimensions(/*out*/ KPPP kppp_[KPPP_LOWER_COUNT]) const
-		{
+		void toLowerDimensions(/*out*/ KPPP kppp_[KPPP_LOWER_COUNT]) const {
 			kppp_[0] = fromKPPP(king_, piece0_, piece1_,piece2_);
 #if KPPP_LOWER_COUNT > 1
 			// mir_pieceするとsortされてない状態になる。sortするコードが必要。
@@ -726,8 +731,7 @@ namespace EvalLearningTools
 		KPPP fromIndex(uint64_t index) const { assert(index >= min_index()); return fromRawIndex(index - min_index()); }
 
 		// raw_index(通し番号ではなく0から始まる番号)からKPPPのオブジェクトを生成するbuilder
-		KPPP fromRawIndex(uint64_t raw_index) const
-		{
+		KPPP fromRawIndex(uint64_t raw_index) const {
 			uint64_t index2 = raw_index % triangle_fe_end;
 
 			// ここにindex2からpiece0,piece1,piece2を求める式を書く。
@@ -739,12 +743,15 @@ namespace EvalLearningTools
 			// この処理、数値計算としてわりと難しい。色々工夫が必要。
 
 			int piece0;
+
 			if (index2 <= 1)
 			{
 				// index2 == 0,1のときだけ実数解が複数ある。
 				piece0 = (int)index2 + 2;
 
-			} else {
+			}
+            else
+            {
 
 				//double t = pow(sqrt((243 *index2 * index2 - 1) * 3) + 27 * index2, 1.0 / 3);
 				// →　これだとindex2が大きくなるとsqrt()の中身、オーバーフローする。
@@ -802,10 +809,10 @@ namespace EvalLearningTools
 
 		// k,p0,p1,p2を指定してKPPPのインスタンスをbuildする。
 		// 内部的に保持しているset()で渡されたking_sqとfe_endは引き継ぐ。
-		KPPP fromKPPP(int king, Eval::BonaPiece p0, Eval::BonaPiece p1, Eval::BonaPiece p2) const
-		{
+		KPPP fromKPPP(int king, Eval::BonaPiece p0, Eval::BonaPiece p1, Eval::BonaPiece p2) const {
 			KPPP kppp(king, p0, p1, p2);
 			kppp.set(max_king_sq_, fe_end_,min_index());
+
 			return kppp;
 		}
 
@@ -839,6 +846,7 @@ namespace EvalLearningTools
 		Eval::BonaPiece piece0() const { return piece0_; }
 		Eval::BonaPiece piece1() const { return piece1_; }
 		Eval::BonaPiece piece2() const { return piece2_; }
+
 		// toLowerDimensionsで次元下げしたものがinverseしたものであるかを返す。
 		// KK,KKPとinterfaceを合せるために用意してある。このKPPPクラスでは、このメソッドは常にfalseを返す。
 		bool is_inverse() const {
@@ -854,10 +862,10 @@ namespace EvalLearningTools
 			// piece0 > piece1 > piece2を前提とするので、入れ替わりの可能性はない。
 			return king() == rhs.king() && piece0() == rhs.piece0() && piece1() == rhs.piece1() && piece2() == rhs.piece2();
 		}
+
 		bool operator!=(const KPPP& rhs) { return !(*this == rhs); }
 
 	private:
-
 		int king_;
 		Eval::BonaPiece piece0_, piece1_,piece2_;
 
@@ -870,8 +878,7 @@ namespace EvalLearningTools
 	};
 
 	// デバッグ用出力。
-	static std::ostream& operator<<(std::ostream& os, KPPP rhs)
-	{
+	static std::ostream& operator<<(std::ostream& os, KPPP rhs) {
 		os << "KPPP(" << rhs.king() << "," << rhs.piece0() << "," << rhs.piece1() << "," << rhs.piece2() << ")";
 		return os;
 	}
@@ -891,8 +898,7 @@ namespace EvalLearningTools
 	{
 	protected:
 		KKPP(int king, Eval::BonaPiece p0, Eval::BonaPiece p1) :
-			king_(king), piece0_(p0), piece1_(p1)
-		{
+			king_(king), piece0_(p0), piece1_(p1) {
 			assert(piece0_ > piece1_);
 			/* sort_piece(); */
 		}
@@ -921,8 +927,7 @@ namespace EvalLearningTools
 		// 低次元の配列のindexを得る。
 		// p0,p1,p2を入れ替えたものは返らないので注意。
 		// またミラーしたものも、USE_KPPP_MIRROR_WRITEが有効なときしか返さない。
-		void toLowerDimensions(/*out*/ KKPP kkpp_[KPPP_LOWER_COUNT]) const
-		{
+		void toLowerDimensions(/*out*/ KKPP kkpp_[KPPP_LOWER_COUNT]) const {
 			kkpp_[0] = fromKKPP(king_, piece0_, piece1_);
 
 			// ミラーする場合、mir_pieceするとsortされてない状態になる。sortするコードが必要。
@@ -933,8 +938,7 @@ namespace EvalLearningTools
 		KKPP fromIndex(uint64_t index) const { assert(index >= min_index()); return fromRawIndex(index - min_index()); }
 
 		// raw_index(通し番号ではなく0から始まる番号)からKKPPのオブジェクトを生成するbuilder
-		KKPP fromRawIndex(uint64_t raw_index) const
-		{
+		KKPP fromRawIndex(uint64_t raw_index) const {
 			uint64_t index2 = raw_index % triangle_fe_end;
 
 			// ここにindex2からpiece0,piece1,piece2を求める式を書く。
@@ -946,13 +950,12 @@ namespace EvalLearningTools
 			int piece1 = int(index2 - piece0 * (piece0 - 1) /2 );
 
 			assert(piece0 > piece1);
-
 			assert(piece1 < (int)fe_end_);
 			assert(piece0 < (int)fe_end_);
 
 			raw_index /= triangle_fe_end;
-
 			int king = (int)(raw_index  /* % SQUARE_NB */);
+
 			assert(king < max_king_sq_);
 
 			// king_sqとfe_endに関しては伝播させる。
@@ -961,10 +964,10 @@ namespace EvalLearningTools
 
 		// k,p0,p1を指定してKKPPのインスタンスをbuildする。
 		// 内部的に保持しているset()で渡されたking_sqとfe_endは引き継ぐ。
-		KKPP fromKKPP(int king, Eval::BonaPiece p0, Eval::BonaPiece p1) const
-		{
+		KKPP fromKKPP(int king, Eval::BonaPiece p0, Eval::BonaPiece p1) const {
 			KKPP kkpp(king, p0, p1);
 			kkpp.set(max_king_sq_, fe_end_,min_index());
+
 			return kkpp;
 		}
 
@@ -1008,10 +1011,10 @@ namespace EvalLearningTools
 			// piece0 > piece1を前提とするので、入れ替わりの可能性はない。
 			return king() == rhs.king() && piece0() == rhs.piece0() && piece1() == rhs.piece1();
 		}
+
 		bool operator!=(const KKPP& rhs) { return !(*this == rhs); }
 
 	private:
-
 		int king_;
 		Eval::BonaPiece piece0_, piece1_;
 
@@ -1021,14 +1024,12 @@ namespace EvalLearningTools
 	};
 
 	// デバッグ用出力。
-	static std::ostream& operator<<(std::ostream& os, KKPP rhs)
-	{
+	static std::ostream& operator<<(std::ostream& os, KKPP rhs) {
 		os << "KKPP(" << rhs.king() << "," << rhs.piece0() << "," << rhs.piece1() << ")";
 		return os;
 	}
-
-
 }
 
 #endif // defined (EVAL_LEARN)
+
 #endif

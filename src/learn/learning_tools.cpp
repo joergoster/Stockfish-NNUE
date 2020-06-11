@@ -9,11 +9,9 @@
 
 using namespace Eval;
 
-namespace EvalLearningTools
-{
+namespace EvalLearningTools {
 
-	// --- static variables
-
+	// static variables
 	double Weight::eta;
 	double Weight::eta1;
 	double Weight::eta2;
@@ -25,8 +23,8 @@ namespace EvalLearningTools
 
 	// --- 個別のテーブルごとの初期化
 
-	void init_min_index_flag()
-	{
+	void init_min_index_flag() {
+
 		// mir_piece、inv_pieceの初期化が終わっていなければならない。
 		assert(mir_piece(Eval::f_pawn) == Eval::e_pawn);
 
@@ -73,8 +71,10 @@ namespace EvalLearningTools
 					assert(a[0].toIndex() == index);
 
 					uint64_t min_index = UINT64_MAX;
+
 					for (auto& e : a)
 						min_index = std::min(min_index, e.toIndex());
+
 					min_index_flag[index] = (min_index == index);
 				}
 				else if (g_kkp.is_ok(index))
@@ -88,8 +88,10 @@ namespace EvalLearningTools
 					assert(a[0].toIndex() == index);
 
 					uint64_t min_index = UINT64_MAX;
+
 					for (auto& e : a)
 						min_index = std::min(min_index, e.toIndex());
+
 					min_index_flag[index] = (min_index == index);
 				}
 				else if (g_kpp.is_ok(index))
@@ -103,20 +105,19 @@ namespace EvalLearningTools
 					assert(a[0].toIndex() == index);
 
 					uint64_t min_index = UINT64_MAX;
+
 					for (auto& e : a)
 						min_index = std::min(min_index, e.toIndex());
+
 					min_index_flag[index] = (min_index == index);
 				}
 				else
-				{
 					assert(false);
-				}
 			}
 		}
 	}
 
-	void learning_tools_unit_test_kpp()
-	{
+	void learning_tools_unit_test_kpp() {
 
 		// KPPの三角配列化にバグがないかテストする
 		// k-p0-p1のすべての組み合わせがきちんとKPPの扱う対象になっていかと、そのときの次元下げが
@@ -142,6 +143,7 @@ namespace EvalLearningTools
 					KPP kpp_array[2];
 
 					auto index = kpp_org.toIndex();
+
 					assert(g_kpp.is_ok(index));
 
 					kpp0 = g_kpp.fromIndex(index);
@@ -162,9 +164,7 @@ namespace EvalLearningTools
 		// 抜けてるindexがなかったかの確認。
 		for(size_t index = 0 ; index < f.size(); index++)
 			if (!f[index])
-			{
 				std::cout << index << g_kpp.fromIndex(index + g_kpp.min_index()) <<  std::endl;
-			}
 	}
 
 	void learning_tools_unit_test_kppp()
@@ -210,14 +210,18 @@ namespace EvalLearningTools
 		KKPP g_kkpp;
 		g_kkpp.set(SQUARE_NB, 10000 , 0);
 		uint64_t n = 0;
+
 		for (int k = 0; k<SQUARE_NB; ++k)
 			for (int i = 0; i<10000; ++i) // 試しに、かなり大きなfe_endを想定して10000で回してみる。
 				for (int j = 0; j < i; ++j)
 				{
 					auto kkpp = g_kkpp.fromKKPP(k, (BonaPiece)i, (BonaPiece)j);
 					auto r = kkpp.toRawIndex();
+
 					assert(n++ == r);
+
 					auto kkpp2 = g_kkpp.fromIndex(r + g_kkpp.min_index());
+
 					assert(kkpp2.king() == k && kkpp2.piece0() == i && kkpp2.piece1() == j);
 				}
 	}
@@ -251,6 +255,6 @@ namespace EvalLearningTools
 			first = false;
 		}
 	}
-}
+} // namespace EvalLearningTools
 
 #endif
