@@ -11,12 +11,12 @@
 #include "../layers/clipped_relu.h"
 
 namespace Eval {
-
   namespace NNUE {
 
     // •]‰¿ŠÖ”‚Å—p‚¢‚é“ü—Í“Á’¥—Ê
     using RawFeatures = Features::FeatureSet<Features::K, Features::P,
-      Features::CastlingRight, Features::EnPassant>;
+                                             Features::CastlingRight,
+                                             Features::EnPassant>;
 
     // •ÏŠ·Œã‚Ì“ü—Í“Á’¥—Ê‚ÌŸŒ³”
     constexpr IndexType kTransformedFeatureDimensions = 256;
@@ -34,5 +34,4 @@ namespace Eval {
     using Network = Layers::OutputLayer;
 
   }  // namespace NNUE
-
 }  // namespace Eval
