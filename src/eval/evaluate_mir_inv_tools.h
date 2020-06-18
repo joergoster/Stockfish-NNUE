@@ -5,12 +5,12 @@
 
 // BonaPieceのmirror(左右反転)やinverse(盤上の180度回転)させた駒を得るためのツール類。
 
-#include "../types.h"
-#include "../evaluate.h"
 #include <functional>
 
-namespace Eval
-{
+#include "../types.h"
+#include "../evaluate.h"
+
+namespace Eval {
 	// -------------------------------------------------
 	//                  tables
 	// -------------------------------------------------
@@ -40,7 +40,8 @@ namespace Eval
 
 	// この関数を明示的に呼び出すか、init()を呼び出すかしたときに、上のテーブルが初期化される。
 	extern void init_mir_inv_tables();
-}
+
+} // namespace Eval
 
 #endif  // defined(EVAL_NNUE) || defined(EVAL_LEARN)
 

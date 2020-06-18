@@ -15,8 +15,7 @@
 // KPPファイル名
 #define KPP_BIN "KPP_synthesized.bin"
 
-namespace Eval
-{
+namespace Eval {
 
 #if defined(USE_EVAL_HASH)
 	// prefetchする関数
@@ -73,10 +72,8 @@ namespace Eval
 	void regularize_kk();
 
 #endif
-
-
-}
+} // namespace Eval
 
 #endif  // defined(EVAL_NNUE) || defined(EVAL_LEARN)
 
-#endif // _EVALUATE_KPPT_COMMON_H_
+#endif // _EVALUATE_COMMON_H_

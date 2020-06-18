@@ -2,8 +2,7 @@
 
 #include "evaluate_mir_inv_tools.h"
 
-namespace Eval
-{
+namespace Eval {
 
 	// --- tables
 
@@ -32,7 +31,10 @@ namespace Eval
 
 		// 初期化は1回に限る。
 		static bool first = true;
-		if (!first) return;
+
+		if (!first)
+            return;
+
 		first = false;
 
 		// fとeとの交換
@@ -185,6 +187,6 @@ namespace Eval
 #endif
 	}
 
-}
+} // namespace Eval
 
 #endif  // defined(EVAL_NNUE) || defined(EVAL_LEARN)
