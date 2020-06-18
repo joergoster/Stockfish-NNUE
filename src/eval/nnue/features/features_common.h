@@ -9,39 +9,35 @@
 #include "../nnue_common.h"
 
 namespace Eval {
+  namespace NNUE {
+    namespace Features {
 
-namespace NNUE {
+      // インデックスリストの型
+      class IndexList;
 
-namespace Features {
+      // 特徴量セットを表すクラステンプレート
+      template <typename... FeatureTypes>
+      class FeatureSet;
 
-// インデックスリストの型
-class IndexList;
+      // 差分計算の代わりに全計算を行うタイミングの種類
+      enum class TriggerEvent {
+        kNone,             // 可能な場合は常に差分計算する
+        kFriendKingMoved,  // 自玉が移動した場合に全計算する
+        kEnemyKingMoved,   // 敵玉が移動した場合に全計算する
+        kAnyKingMoved,     // どちらかの玉が移動した場合に全計算する
+        kAnyPieceMoved,    // 常に全計算する
+      };
 
-// 特徴量セットを表すクラステンプレート
-template <typename... FeatureTypes>
-class FeatureSet;
+      // 手番側or相手側
+      enum class Side {
+        kFriend,  // 手番側
+        kEnemy,   // 相手側
+      };
 
-// 差分計算の代わりに全計算を行うタイミングの種類
-enum class TriggerEvent {
-  kNone,             // 可能な場合は常に差分計算する
-  kFriendKingMoved,  // 自玉が移動した場合に全計算する
-  kEnemyKingMoved,   // 敵玉が移動した場合に全計算する
-  kAnyKingMoved,     // どちらかの玉が移動した場合に全計算する
-  kAnyPieceMoved,    // 常に全計算する
-};
+    } // namespace Features
+  } // namespace NNUE
+} // namespace Eval
 
-// 手番側or相手側
-enum class Side {
-  kFriend,  // 手番側
-  kEnemy,   // 相手側
-};
-
-}  // namespace Features
-
-}  // namespace NNUE
-
-}  // namespace Eval
-
-#endif  // defined(EVAL_NNUE)
+#endif // defined(EVAL_NNUE)
 
 #endif
