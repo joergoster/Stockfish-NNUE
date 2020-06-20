@@ -164,7 +164,9 @@ typedef float LearnFloatType;
 
 // 引き分けに至ったとき、それを教師局面として書き出す
 // これをするほうが良いかどうかは微妙。
-// #define LEARN_GENSFEN_USE_DRAW_RESULT
+// When a tie is reached, write it down as a teacher phase.
+// Whether or not it's better to do this is not clear.
+#define LEARN_GENSFEN_USE_DRAW_RESULT
 
 
 // ======================
