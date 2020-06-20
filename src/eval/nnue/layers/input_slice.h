@@ -8,66 +8,63 @@
 #include "../nnue_common.h"
 
 namespace Eval {
+  namespace NNUE {
+    namespace Layers {
 
-namespace NNUE {
+      // 入力層
+      template <IndexType OutputDimensions, IndexType Offset = 0>
+      class InputSlice {
+      public:
+        // アライメントを維持する必要がある
+        static_assert(Offset % kMaxSimdWidth == 0, "");
 
-namespace Layers {
+        // 出力の型
+        using OutputType = TransformedFeatureType;
 
-// 入力層
-template <IndexType OutputDimensions, IndexType Offset = 0>
-class InputSlice {
- public:
-  // アライメントを維持する必要がある
-  static_assert(Offset % kMaxSimdWidth == 0, "");
+        // 出力の次元数
+        static constexpr IndexType kOutputDimensions = OutputDimensions;
 
-  // 出力の型
-  using OutputType = TransformedFeatureType;
+        // 入力層からこの層までで使用する順伝播用バッファのサイズ
+        static constexpr std::size_t kBufferSize = 0;
 
-  // 出力の次元数
-  static constexpr IndexType kOutputDimensions = OutputDimensions;
+        // 評価関数ファイルに埋め込むハッシュ値
+        static constexpr std::uint32_t GetHashValue() {
 
-  // 入力層からこの層までで使用する順伝播用バッファのサイズ
-  static constexpr std::size_t kBufferSize = 0;
+          std::uint32_t hash_value = 0xEC42E90Du;
+          hash_value ^= kOutputDimensions ^ (Offset << 10);
 
-  // 評価関数ファイルに埋め込むハッシュ値
-  static constexpr std::uint32_t GetHashValue() {
-    std::uint32_t hash_value = 0xEC42E90Du;
-    hash_value ^= kOutputDimensions ^ (Offset << 10);
-    return hash_value;
-  }
+          return hash_value;
+        }
 
-  // 入力層からこの層までの構造を表す文字列
-  static std::string GetStructureString() {
-    return "InputSlice[" + std::to_string(kOutputDimensions) + "(" +
-        std::to_string(Offset) + ":" +
-        std::to_string(Offset + kOutputDimensions) + ")]";
-  }
+        // 入力層からこの層までの構造を表す文字列
+        static std::string GetStructureString() {
+          return "InputSlice[" + std::to_string(kOutputDimensions) + "("
+                               + std::to_string(Offset) + ":"
+                               + std::to_string(Offset + kOutputDimensions) + ")]";
+        }
 
-  // パラメータを読み込む
-  bool ReadParameters(std::istream& /*stream*/) {
-    return true;
-  }
+        // パラメータを読み込む
+        bool ReadParameters(std::istream& /*stream*/) {
+          return true;
+        }
 
-  // パラメータを書き込む
-  bool WriteParameters(std::ostream& /*stream*/) const {
-    return true;
-  }
+        // パラメータを書き込む
+        bool WriteParameters(std::ostream& /*stream*/) const {
+          return true;
+        }
 
-  // 順伝播
-  const OutputType* Propagate(
-      const TransformedFeatureType* transformed_features,
-      char* /*buffer*/) const {
-    return transformed_features + Offset;
-  }
+        // 順伝播
+        const OutputType* Propagate(const TransformedFeatureType* transformed_features,
+                                    char* /*buffer*/) const {
+          return transformed_features + Offset;
+        }
 
- private:
-};
+      private:
+      };
 
-}  // namespace Layers
-
-}  // namespace NNUE
-
-}  // namespace Eval
+    } // namespace Layers
+  } // namespace NNUE
+} // namespace Eval
 
 #endif  // defined(EVAL_NNUE)
 
