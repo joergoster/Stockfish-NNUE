@@ -2162,7 +2162,7 @@ namespace Learner
     auto& completedDepth = th->completedDepth;
     auto& selDepth = th->selDepth;
 
-    // bestmove‚Æ‚µ‚Ä‚µ‚±‚Ì‹Ç–Ê‚ÌãˆÊNŒÂ‚ð’Tõ‚·‚é‹@”\
+    // bestmove‚Æ‚µ‚Ä‚µ‚±‚Ì‹Ç–Ê‚ÌãˆÊNŒÂ‚ð’Tõ‚·‚é‹@”
     //size_t multiPV = Options["MultiPV"];
 
     // ‚±‚Ì‹Ç–Ê‚Å‚ÌŽw‚µŽè‚Ì”‚ðã‰ñ‚Á‚Ä‚Í‚¢‚¯‚È‚¢

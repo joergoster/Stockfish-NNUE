@@ -166,7 +166,7 @@ endif
 
 ### 3.1 Selecting compiler (default = gcc)
 
-CXXFLAGS += -Wall -Wcast-qual -fno-exceptions -std=c++14 $(EXTRACXXFLAGS)
+CXXFLAGS += -Wall -Wcast-qual -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable -fno-exceptions -std=c++14 $(EXTRACXXFLAGS)
 DEPENDFLAGS += -std=c++14
 LDFLAGS += $(EXTRALDFLAGS)
 
@@ -340,7 +340,7 @@ ifeq ($(popcnt),yes)
 	else ifeq ($(comp),icc)
 		CXXFLAGS += -msse3 -DUSE_POPCNT
 	else
-		CXXFLAGS += -msse3 -mpopcnt -DUSE_POPCNT
+		CXXFLAGS += -msse3 -mavx2 -mpopcnt -DUSE_POPCNT
 	endif
 endif
 
