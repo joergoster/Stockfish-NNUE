@@ -25,11 +25,11 @@
 #include <cassert>
 #include <chrono>
 #include <functional>
+#include <mm_malloc.h>
 #include <mutex>
 #include <ostream>
 #include <string>
 #include <vector>
-#include <xmmintrin.h>
 
 #include "types.h"
 #include "thread_win32_osx.h"
