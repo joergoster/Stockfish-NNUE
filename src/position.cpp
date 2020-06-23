@@ -715,9 +715,17 @@ void Position::do_move(Move m, StateInfo& newSt, bool givesCheck) {
   Key k = st->key ^ Zobrist::side;
 
   // Copy some fields of the old state to our new StateInfo object except the
-  // ones which are going to be recalculated from scratch anyway and then switch
-  // our state pointer to point to the new (ready to be updated) state.
-  std::memcpy(&newSt, st, offsetof(StateInfo, key));
+  // ones which are going to be recalculated from scratch anyways, and then switch
+  // our state pointer to the new (ready to be updated) state.
+  newSt.pawnKey = st->pawnKey;
+  newSt.materialKey = st->materialKey;
+  newSt.nonPawnMaterial[WHITE] = st->nonPawnMaterial[WHITE];
+  newSt.nonPawnMaterial[BLACK] = st->nonPawnMaterial[BLACK];
+  newSt.castlingRights = st->castlingRights;
+  newSt.rule50 = st->rule50;
+  newSt.pliesFromNull = st->pliesFromNull;
+  newSt.epSquare = st->epSquare;
+
   newSt.previous = st;
   st = &newSt;
 
