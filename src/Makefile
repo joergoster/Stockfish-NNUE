@@ -442,8 +442,10 @@ endif
 ### 3.6 popcnt
 ifeq ($(popcnt),yes)
 	CXXFLAGS += -DUSE_POPCNT
-	ifeq ($(comp),$(filter $(comp),gcc clang mingw msys2))
-		CXXFLAGS += -mpopcnt
+	ifneq ($(arch),$(filter $(arch),ppc64 armv8-a))
+		ifeq ($(comp),$(filter $(comp),gcc clang mingw msys2))
+			CXXFLAGS += -mpopcnt
+		endif
 	endif
 endif
 
@@ -457,7 +459,7 @@ endif
 ifeq ($(avx512),yes)
 	CXXFLAGS += -DUSE_AVX512
 	ifeq ($(comp),$(filter $(comp),gcc clang mingw msys2))
-		CXXFLAGS += -mavx512vbmi
+		CXXFLAGS += -mavx512bw
 	endif
 endif
 
