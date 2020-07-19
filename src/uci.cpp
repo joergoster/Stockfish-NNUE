@@ -391,7 +391,6 @@ void UCI::loop(int argc, char* argv[]) {
       else if (token == "bench")    bench(pos, is, states);
       else if (token == "d")        sync_cout << pos << sync_endl;
       else if (token == "eval")     sync_cout << Eval::trace(pos) << sync_endl;
-      else if (token == "compiler") sync_cout << compiler_info() << sync_endl;
 #if defined (EVAL_LEARN)
       else if (token == "gensfen") Learner::gen_sfen(pos, is);
       else if (token == "learn") Learner::learn(pos, is);

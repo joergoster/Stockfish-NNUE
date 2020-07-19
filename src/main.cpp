@@ -22,6 +22,7 @@
 
 #include "bitboard.h"
 #include "endgame.h"
+#include "misc.h"
 #include "position.h"
 #include "search.h"
 #include "thread.h"
@@ -35,7 +36,8 @@ namespace PSQT {
 
 int main(int argc, char* argv[]) {
 
-  std::cout << engine_info() << std::endl;
+  std::cout <<   engine_info() << "\n"
+            << compiler_info() << std::endl;
 
   UCI::init(Options);
   Tune::init();
