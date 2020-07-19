@@ -39,11 +39,9 @@ Value compute_eval(const Position& pos);
 
 #if defined(EVAL_NNUE) || defined(EVAL_LEARN)
 // Read the evaluation function file.
-// This is only called once in response to the "is_ready" command. It is not supposed to be called twice.
-// (However, if isready is sent again after EvalDir (evaluation function folder) has been changed, read it again.)
 void load_eval();
 
-static uint64_t calc_check_sum() {return 0;}
+static uint64_t calc_check_sum() { return 0; }
 
 static void print_softname(uint64_t check_sum) {}
 
