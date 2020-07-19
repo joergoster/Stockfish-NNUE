@@ -926,8 +926,8 @@ namespace {
                 if (value >= probcutBeta)
                 {
                     tte->save(posKey, value_to_tt(value, ss->ply), ttPv,
-                        BOUND_LOWER,
-                        depth - 3, move, ss->staticEval);
+                              BOUND_LOWER, depth - 3, move, ss->staticEval);
+
                     return value;
                 }
             }
