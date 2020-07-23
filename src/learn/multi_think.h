@@ -3,56 +3,54 @@
 
 #if defined(EVAL_LEARN)
 
+#include <atomic>
 #include <functional>
+#include <random>
 
 #include "../misc.h"
 #include "../learn/learn.h"
 #include "../thread_win32_osx.h"
 
-#include <atomic>
-
 // Learning from a game record, when making yourself think and generating a fixed track, etc.
 // Helper class used when multiple threads want to call Search::think() individually.
 // Derive and use this class.
-struct MultiThink
-{
-	MultiThink() : prng(21120903)
-	{
-		loop_count = 0;
-	}
+struct MultiThink {
 
-	// Call this function from the master thread, each thread will think,
-	// Return control when the thought ending condition is satisfied.
-	// Do something else.
-	// ・It is safe for each thread to call Learner::search(),qsearch()
-	// Separates the substitution table for each thread. (It will be restored after the end.)
-	// ・Book is not thread safe when in on the fly mode, so temporarily change this mode.
-	// Turn it off.
-	// [Requirements]
-	// 1) Override thread_worker()
-	// 2) Set the loop count with set_loop_max()
-	// 3) set a function to be called back periodically (if necessary)
-	// callback_func and callback_interval
+    std::random_device rd;
+	MultiThink() : prng(rd()) { loop_count = 0; } // 21120903
+
+ 	// Call this function from the master thread, each thread will think,
+ 	// Return control when the thought ending condition is satisfied.
+ 	// Do something else.
+ 	// ・It is safe for each thread to call Learner::search(),qsearch()
+ 	// Separates the substitution table for each thread. (It will be restored after the end.)
+ 	// ・Book is not thread safe when in on the fly mode, so temporarily change this mode.
+ 	// Turn it off.
+ 	// [Requirements]
+ 	// 1) Override thread_worker()
+ 	// 2) Set the loop count with set_loop_max()
+ 	// 3) set a function to be called back periodically (if necessary)
+ 	// callback_func and callback_interval
 	void go_think();
 
-	// If there is something you want to initialize on the derived class side, override this,
-	// Called when initialization is completed with go_think().
-	// It is better to read the fixed trace at that timing.
-	virtual void init() {}
+ 	// If there is something you want to initialize on the derived class side, override this,
+ 	// Called when initialization is completed with go_think().
+ 	// It is better to read the fixed trace at that timing.
+ 	virtual void init() {}
 
-	// A thread worker that is called by creating a thread when you go_think()
-	// Override and use this.
-	virtual void thread_worker(size_t thread_id) = 0;
+ 	// A thread worker that is called by creating a thread when you go_think()
+ 	// Override and use this.
+ 	virtual void thread_worker(size_t thread_id) = 0;
 
-	// Called back every callback_seconds [seconds] when go_think().
-	std::function<void()> callback_func;
-	uint64_t callback_seconds = 600;
+ 	// Called back every callback_seconds [seconds] when go_think().
+ 	std::function<void()> callback_func;
+ 	uint64_t callback_seconds = 600;
 
 	// Set the number of times worker processes (calls Search::think()).
-	void set_loop_max(uint64_t loop_max_) { loop_max = loop_max_; }
+ 	void set_loop_max(uint64_t loop_max_) { loop_max = loop_max_; }
 
-	// Get the value set by set_loop_max().
-	uint64_t get_loop_max() const { return loop_max; }
+ 	// Get the value set by set_loop_max().
+ 	uint64_t get_loop_max() const { return loop_max; }
 
 	// [ASYNC] Take the value of the loop counter and add the loop counter after taking it out.
 	// If the loop counter has reached loop_max, return UINT64_MAX.
